@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Mini RDBMS{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p class="mt-2 text-gray-600">Manage your database tables and data</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                    <i class="fas fa-plus text-white text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Create Table</h3>
+                    <p class="text-sm text-gray-500">Design a new database table</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="/create-table" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Create Table
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                    <i class="fas fa-search text-white text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Execute Query</h3>
+                    <p class="text-sm text-gray-500">Run custom SQL queries</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="/query" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Execute Query
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                    <i class="fas fa-table text-white text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Tables</h3>
+                    <p class="text-sm text-gray-500">{{ tables|length }} table(s) in database</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="text-sm text-gray-600">
+                    Total rows: {{ tables|sum(attribute='row_count') }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables List -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Database Tables</h3>
+            
+            {% if tables %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for table in tables %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-md font-semibold text-gray-900">{{ table.name }}</h4>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {{ table.row_count }} rows
+                        </span>
+                    </div>
+                    
+                    <div class="text-sm text-gray-600 mb-3">
+                        <p><strong>Columns:</strong> {{ table.columns|length }}</p>
+                        {% if table.primary_key %}
+                        <p><strong>Primary Key:</strong> {{ table.primary_key }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <a href="/table/{{ table.name }}" class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-md text-sm font-medium text-center">
+                            <i class="fas fa-eye mr-1"></i> View
+                        </a>
+                        <a href="/insert/{{ table.name }}" class="flex-1 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 rounded-md text-sm font-medium text-center">
+                            <i class="fas fa-plus mr-1"></i> Insert
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-database text-gray-400 text-5xl mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No tables found</h3>
+                <p class="text-gray-500 mb-4">Get started by creating your first table.</p>
+                <a href="/create-table" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="fas fa-plus mr-2"></i> Create Table
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

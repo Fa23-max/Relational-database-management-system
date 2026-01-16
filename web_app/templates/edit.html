@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ table_name }} - Mini RDBMS{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <div class="mb-6">
+        <div class="flex items-center">
+            <a href="/table/{{ table_name }}" class="text-blue-600 hover:text-blue-800 mr-3">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Edit Row</h1>
+                <p class="mt-2 text-gray-600">Update data in {{ table_name }} table (Row ID: {{ row_id }})</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white shadow rounded-lg">
+        <form method="post">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for column in columns %}
+                    <div>
+                        <label for="{{ column.name }}" class="block text-sm font-medium text-gray-700">
+                            {{ column.name }}
+                            {% if 'PRIMARY_KEY' in column.constraints %}
+                            <i class="fas fa-key text-yellow-500 ml-1" title="Primary Key"></i>
+                            {% endif %}
+                            {% if 'UNIQUE' in column.constraints %}
+                            <i class="fas fa-fingerprint text-blue-500 ml-1" title="Unique"></i>
+                            {% endif %}
+                            {% if 'NOT_NULL' in column.constraints %}
+                            <span class="text-red-500 ml-1">*</span>
+                            {% endif %}
+                        </label>
+                        
+                        {% if column.type == 'BOOL' %}
+                        <select id="{{ column.name }}" name="{{ column.name }}" 
+                                {% if 'NOT_NULL' in column.constraints %}required{% endif %}
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">Select...</option>
+                            <option value="true" {% if data[column.name] == true %}selected{% endif %}>TRUE</option>
+                            <option value="false" {% if data[column.name] == false %}selected{% endif %}>FALSE</option>
+                        </select>
+                        
+                        {% elif column.type == 'INT' %}
+                        <input type="number" id="{{ column.name }}" name="{{ column.name }}" 
+                               value="{{ data[column.name] if data[column.name] is not none else '' }}"
+                               {% if 'NOT_NULL' in column.constraints %}required{% endif %}
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="Enter integer value">
+                        
+                        {% elif column.type == 'FLOAT' %}
+                        <input type="number" id="{{ column.name }}" name="{{ column.name }}" step="any"
+                               value="{{ data[column.name] if data[column.name] is not none else '' }}"
+                               {% if 'NOT_NULL' in column.constraints %}required{% endif %}
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="Enter decimal value">
+                        
+                        {% else %} <!-- TEXT -->
+                        <input type="text" id="{{ column.name }}" name="{{ column.name }}" 
+                               value="{{ data[column.name] if data[column.name] is not none else '' }}"
+                               {% if 'NOT_NULL' in column.constraints %}required{% endif %}
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="Enter text value">
+                        {% endif %}
+                        
+                        <p class="mt-1 text-sm text-gray-500">
+                            Type: <span class="font-medium">{{ column.type }}</span>
+                            {% if column.constraints %}
+                            • Constraints: {{ column.constraints|join(', ') }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Row ID (hidden) -->
+                <input type="hidden" name="row_id" value="{{ row_id }}">
+            </div>
+
+            <!-- Form Actions -->
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="submit" 
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    <i class="fas fa-save mr-2"></i> Update Row
+                </button>
+                <a href="/table/{{ table_name }}" 
+                   class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

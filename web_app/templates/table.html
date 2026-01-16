@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}{{ table_name }} - Mini RDBMS{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">{{ table_name }}</h1>
+                {% if table_info %}
+                <p class="mt-2 text-gray-600">
+                    {{ table_info.row_count }} rows • {{ table_info.columns|length }} columns
+                    {% if table_info.primary_key %}• Primary Key: {{ table_info.primary_key }}{% endif %}
+                </p>
+                {% endif %}
+            </div>
+            <div class="flex space-x-3">
+                <a href="/insert/{{ table_name }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                    <i class="fas fa-plus mr-2"></i> Insert Row
+                </a>
+                <a href="/" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Data -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        {% if data %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        {% for column in columns %}
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {{ column }}
+                            {% if table_info %}
+                            {% for col in table_info.columns %}
+                            {% if col.name == column %}
+                            {% if 'PRIMARY_KEY' in col.constraints %}
+                            <i class="fas fa-key text-yellow-500 ml-1" title="Primary Key"></i>
+                            {% endif %}
+                            {% if 'UNIQUE' in col.constraints %}
+                            <i class="fas fa-fingerprint text-blue-500 ml-1" title="Unique"></i>
+                            {% endif %}
+                            {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </th>
+                        {% endfor %}
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for row in data %}
+                    <tr class="hover:bg-gray-50">
+                        {% for column in columns %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {% if row[column] is none %}
+                            <span class="text-gray-400 italic">NULL</span>
+                            {% elif row[column] == true %}
+                            <span class="text-green-600 font-medium">TRUE</span>
+                            {% elif row[column] == false %}
+                            <span class="text-red-600 font-medium">FALSE</span>
+                            {% else %}
+                            {{ row[column] }}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="/edit/{{ table_name }}/{{ row.row_id }}" class="text-blue-600 hover:text-blue-900">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <form method="post" action="/delete/{{ table_name }}/{{ row.row_id }}" 
+                                      onsubmit="return confirm('Are you sure you want to delete this row?')" class="inline">
+                                    <button type="submit" class="text-red-600 hover:text-red-900">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-table text-gray-400 text-5xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No data found</h3>
+            <p class="text-gray-500 mb-4">This table is empty. Start by inserting some data.</p>
+            <a href="/insert/{{ table_name }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                <i class="fas fa-plus mr-2"></i> Insert First Row
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Table Schema -->
+    {% if table_info %}
+    <div class="mt-8 bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Table Schema</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Column</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Constraints</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for column in table_info.columns %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ column.name }}
+                                {% if column.name == table_info.primary_key %}
+                                <i class="fas fa-key text-yellow-500 ml-2" title="Primary Key"></i>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ column.type }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% for constraint in column.constraints %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    {% if constraint == 'PRIMARY_KEY' %}bg-yellow-100 text-yellow-800
+                                    {% elif constraint == 'UNIQUE' %}bg-blue-100 text-blue-800
+                                    {% elif constraint == 'NOT_NULL' %}bg-red-100 text-red-800
+                                    {% endif %}">
+                                    {{ constraint.replace('_', ' ') }}
+                                </span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

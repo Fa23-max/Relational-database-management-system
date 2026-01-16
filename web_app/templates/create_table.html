@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Create Table - Mini RDBMS{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Create Table</h1>
+        <p class="mt-2 text-gray-600">Design a new database table with columns and constraints</p>
+    </div>
+
+    <div class="bg-white shadow rounded-lg">
+        <form method="post" action="/create-table" id="createTableForm">
+            <div class="px-4 py-5 sm:p-6">
+                <!-- Table Name -->
+                <div class="mb-6">
+                    <label for="table_name" class="block text-sm font-medium text-gray-700">Table Name</label>
+                    <input type="text" id="table_name" name="table_name" required
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="users">
+                </div>
+
+                <!-- Columns -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Columns</label>
+                        <button type="button" onclick="addColumn()" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm font-medium">
+                            <i class="fas fa-plus mr-1"></i> Add Column
+                        </button>
+                    </div>
+                    
+                    <div id="columnsContainer" class="space-y-4">
+                        <!-- Columns will be added here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Hidden field for columns JSON -->
+                <input type="hidden" id="columns" name="columns">
+            </div>
+
+            <!-- Form Actions -->
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="submit" 
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    <i class="fas fa-save mr-2"></i> Create Table
+                </button>
+                <a href="/" 
+                   class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+let columnCount = 0;
+
+function addColumn() {
+    columnCount++;
+    const container = document.getElementById('columnsContainer');
+    
+    const columnDiv = document.createElement('div');
+    columnDiv.className = 'border border-gray-200 rounded-lg p-4';
+    columnDiv.id = `column-${columnCount}`;
+    
+    columnDiv.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-medium text-gray-900">Column ${columnCount}</h4>
+            <button type="button" onclick="removeColumn('column-${columnCount}')" 
+                    class="text-red-600 hover:text-red-800">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Name</label>
+                <input type="text" name="col_name_${columnCount}" required
+                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                       placeholder="column_name">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Type</label>
+                <select name="col_type_${columnCount}" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">Select type...</option>
+                    {% for type in data_types %}
+                    <option value="{{ type }}">{{ type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Constraints</label>
+                <div class="mt-1 space-y-2">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="col_primary_${columnCount}" class="form-checkbox">
+                        <span class="ml-2 text-sm">Primary Key</span>
+                    </label>
+                    <label class="inline-flex items-center ml-4">
+                        <input type="checkbox" name="col_unique_${columnCount}" class="form-checkbox">
+                        <span class="ml-2 text-sm">Unique</span>
+                    </label>
+                    <label class="inline-flex items-center ml-4">
+                        <input type="checkbox" name="col_not_null_${columnCount}" class="form-checkbox">
+                        <span class="ml-2 text-sm">Not Null</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(columnDiv);
+}
+
+function removeColumn(columnId) {
+    const element = document.getElementById(columnId);
+    if (element) {
+        element.remove();
+    }
+}
+
+// Form submission handler
+document.getElementById('createTableForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const columns = [];
+    const container = document.getElementById('columnsContainer');
+    const columnDivs = container.querySelectorAll('[id^="column-"]');
+    
+    columnDivs.forEach((div, index) => {
+        const nameInput = div.querySelector(`input[name="col_name_${index + 1}"]`);
+        const typeSelect = div.querySelector(`select[name="col_type_${index + 1}"]`);
+        const primaryCheckbox = div.querySelector(`input[name="col_primary_${index + 1}"]`);
+        const uniqueCheckbox = div.querySelector(`input[name="col_unique_${index + 1}"]`);
+        const notNullCheckbox = div.querySelector(`input[name="col_not_null_${index + 1}"]`);
+        
+        if (nameInput && typeSelect) {
+            columns.push({
+                name: nameInput.value,
+                type: typeSelect.value,
+                primary_key: primaryCheckbox ? primaryCheckbox.checked : false,
+                unique: uniqueCheckbox ? uniqueCheckbox.checked : false,
+                not_null: notNullCheckbox ? notNullCheckbox.checked : false
+            });
+        }
+    });
+    
+    document.getElementById('columns').value = JSON.stringify(columns);
+    
+    // Submit the form
+    this.submit();
+});
+
+// Add initial columns
+addColumn();
+addColumn();
+</script>
+{% endblock %}
+{% endblock %}
